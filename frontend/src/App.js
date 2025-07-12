@@ -38,31 +38,36 @@ function App() {
     }
   }, [winner]);
 
-  const checkWinner = (b) => {
-    const lines = [
-      [0,1,2],[3,4,5],[6,7,8],
-      [0,3,6],[1,4,7],[2,5,8],
-      [0,4,8],[2,4,6],
-    ];
-    for (let [a,b,c] of lines) {
-      if (b[a] && b[a] === b[b] && b[a] === b[c]) {
-        return b[a];
-      }
+  const checkWinner = (board) => {
+  const lines = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6],
+  ];
+  for (let [a, b, c] of lines) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
     }
-    return null;
-  };
+  }
+  return null;
+};
 
   const handleClick = (idx) => {
-    if (board[idx] || winner) return;
-    const newBoard = [...board];
-    newBoard[idx] = xIsNext ? 'X' : 'O';
-    setBoard(newBoard);
-    const newWinner = checkWinner(newBoard);
-    if (newWinner) {
-      setWinner(newWinner);
-    }
+  if (board[idx] || winner) return;
+  const newBoard = [...board];
+  newBoard[idx] = xIsNext ? 'X' : 'O';
+  setBoard(newBoard);
+
+  const newWinner = checkWinner(newBoard);
+  if (newWinner) {
+    setWinner(newWinner);
+  } else if (!newBoard.includes(null)) {
+    setWinner('draw');
+  } else {
     setXIsNext(!xIsNext);
-  };
+  }
+};
+
 
   const handleStartGame = async () => {
     if (!player1.trim() || !player2.trim()) return;
@@ -120,9 +125,12 @@ function App() {
       <h1>Tic Tac Toe</h1>
       <p>
         {winner
-          ? `🏆 Winner: ${winner === 'X' ? player1 : player2}`
+          ? winner === 'draw'
+            ? "It's a draw!"
+            : `🏆 Winner: ${winner === 'X' ? player1 : player2}`
           : `Turn: ${xIsNext ? `${player1} (X)` : `${player2} (O)`}`}
       </p>
+
 
       <div style={{
         display: 'grid',
@@ -160,14 +168,13 @@ function App() {
       <div style={{ marginTop: 30 }}>
         <h2>{player1}'s Record (X):</h2>
         <p>Wins: {playerData[player1]?.wins ?? '-'}</p>
-        <p>Losses: {playerData[player1]?.losses ?? '-'}</p>
 
         <h2>{player2}'s Record (O):</h2>
         <p>Wins: {playerData[player2]?.wins ?? '-'}</p>
-        <p>Losses: {playerData[player2]?.losses ?? '-'}</p>
       </div>
     </div>
   );
 }
 
 export default App;
+// Note: Ensure that your backend server is running and accessible at http://localhost:3001
