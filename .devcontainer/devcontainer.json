@@ -1,0 +1,17 @@
+{
+  "name": "Tic Tac Toe Dev",
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    },
+    "3001": {
+      "label": "Backend",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  },
+  "postCreateCommand": "npm install --prefix frontend && npm install --prefix backend"
+}
