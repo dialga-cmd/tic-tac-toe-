@@ -41,4 +41,17 @@ app.post('/player/result', (req, res) => {
   });
 });
 
+app.get('/players', (req, res) => {
+  db.all("SELECT * FROM players", (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+app.post('/player', (req, res) => {
+  const { username } = req.body;
+  db.run("INSERT INTO players (username) VALUES (?)", [username], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ username, wins: 0, losses: 0 });
+  });
+});
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

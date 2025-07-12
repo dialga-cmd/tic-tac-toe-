@@ -12,31 +12,51 @@ function App() {
   const [player2, setPlayer2] = useState('');
   const [playersSet, setPlayersSet] = useState(false);
   const [playerData, setPlayerData] = useState({});
+  const [allPlayers, setAllPlayers] = useState([]);
+
+const getPlayerList = async () => {
+  try {
+    const res = await axios.get('http://localhost:3001/players');
+    setAllPlayers(res.data);
+  } catch (err) {
+    console.error('Failed to fetch players list', err);
+  }
+};
+
+
 
   useEffect(() => {
-    if (winner) {
-      const winnerUsername = winner === 'X' ? player1 : player2;
-      const loserUsername = winner === 'X' ? player2 : player1;
+  if (winner && winner !== 'draw') {
+    const winnerUsername = winner === 'X' ? player1 : player2;
+    const loserUsername = winner === 'X' ? player2 : player1;
 
-      axios.post('http://localhost:3001/player/result', {
+    const updateStats = async () => {
+      await axios.post('http://localhost:3001/player/result', {
         username: winnerUsername,
         result: 'win'
       });
 
-      axios.post('http://localhost:3001/player/result', {
+      await axios.post('http://localhost:3001/player/result', {
         username: loserUsername,
         result: 'loss'
       });
 
-      // Refresh data
-      axios.get(`http://localhost:3001/player/${player1}`).then(res =>
-        setPlayerData(prev => ({ ...prev, [player1]: res.data }))
-      );
-      axios.get(`http://localhost:3001/player/${player2}`).then(res =>
-        setPlayerData(prev => ({ ...prev, [player2]: res.data }))
-      );
-    }
-  }, [winner]);
+      const [res1, res2] = await Promise.all([
+        axios.get(`http://localhost:3001/player/${player1}`),
+        axios.get(`http://localhost:3001/player/${player2}`)
+      ]);
+
+      setPlayerData({
+        [player1]: res1.data,
+        [player2]: res2.data
+      });
+    };
+
+    updateStats();
+  }
+  getPlayerList();
+}, [winner]);
+
 
   const checkWinner = (board) => {
   const lines = [
@@ -90,14 +110,26 @@ function App() {
   };
 
   const exitGame = () => {
-    setPlayersSet(false);
-    setPlayer1('');
-    setPlayer2('');
-    setPlayerData({});
-    setBoard(emptyBoard);
-    setXIsNext(true);
-    setWinner(null);
-  };
+  const p1Data = playerData[player1];
+  const p2Data = playerData[player2];
+
+  if (p1Data && p2Data) {
+    setAllPlayers(prev => {
+      const existing = prev.filter(p => p.username !== player1 && p.username !== player2);
+      return [...existing, p1Data, p2Data];
+    });
+    getPlayerList();
+  }
+
+  setPlayersSet(false);
+  setPlayer1('');
+  setPlayer2('');
+  setPlayerData({});
+  setBoard(emptyBoard);
+  setXIsNext(true);
+  setWinner(null);
+};
+
 
   if (!playersSet) {
     return (
@@ -172,7 +204,32 @@ function App() {
         <h2>{player2}'s Record (O):</h2>
         <p>Wins: {playerData[player2]?.wins ?? '-'}</p>
       </div>
+      {allPlayers.length > 0 && (
+  <div style={{ marginTop: 40 }}>
+    <h2>All Player Stats:</h2>
+    <table style={{ margin: '0 auto', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Username</th>
+          <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Wins</th>
+          <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Losses</th>
+        </tr>
+      </thead>
+      <tbody>
+        {allPlayers.map((p, i) => (
+          <tr key={i}>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{p.username}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{p.wins}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{p.losses}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
     </div>
+    
   );
 }
 
