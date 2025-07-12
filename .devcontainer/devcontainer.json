@@ -1,5 +1,6 @@
 {
   "name": "Tic Tac Toe Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
   "forwardPorts": [3000, 3001],
   "portsAttributes": {
     "3000": {
